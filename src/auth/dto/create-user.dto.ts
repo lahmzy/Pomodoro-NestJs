@@ -13,8 +13,8 @@ export class CreateUserDto {
   password: string;
 
   @IsString()
-  firstname:string
+  firstName:string
 
   @IsString()
-  lastname:string
+  lastName:string
 }

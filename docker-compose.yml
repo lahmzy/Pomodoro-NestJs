@@ -1,0 +1,52 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pomodoro_prod
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - nest-net
+
+networks:
+  nest-net:
+
+volumes:
+  pgdata:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+#   api:
+#     build: .
+#     restart: always
+#     ports:
+#       - "3000:3000"
+#     depends_on:
+#       - db
+#     environment:
+#       DB_HOST: db
+#       DB_PORT: 5432
+#       DB_USER: myuser
+#       DB_PASS: mypassword
+#       DB_NAME: mydb
+
+# volumes:
+#   pgdata:
