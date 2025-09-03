@@ -16,7 +16,7 @@ export class UsersService {
 
   async createUser(user: CreateUserDto) {
     const newUser = this.userRepository.create(user);
-    return this.userRepository.save(newUser);
+    return await this.userRepository.save(newUser);
   }
 
   async findUserByEmail(email:string){
