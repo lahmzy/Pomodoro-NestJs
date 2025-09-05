@@ -22,7 +22,7 @@ async validate(payload: any) {
     // and return the user object or throw an error if not found.
     
     //MAKE DB CALL TO CHECK THE USER EXISTS
-    return { id: payload.id, email: payload.email };
+    return {id: payload.id, email: payload.email};
  }
  
 }

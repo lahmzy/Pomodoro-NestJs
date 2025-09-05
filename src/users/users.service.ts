@@ -19,9 +19,8 @@ export class UsersService {
     return await this.userRepository.save(newUser);
   }
 
-  async findUserByEmail(email:string){
-
-
+  async findUserByEmail(email:string):Promise<User | null>{
+    return await this.userRepository.findOne({where:{email}});
   }
 
 }
