@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards,Res } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from 'src/users/users.service';
 import { AuthService } from './auth.service';
@@ -20,11 +20,22 @@ export class AuthController {
     return { token };
   }
 
-  @Post('login')
-  async login(@Body() loginDto: LoginDto): Promise<{ token: string }> {
-    const token = await this.authService.login(loginDto);
-    return { token };
-  }
+ @Post('login')
+    async login(
+        @Body() loginDto: LoginDto,
+        @Res({passthrough: true}) res: any
+    ): Promise<{message :string}> {
+        const token =  await this.authService.login(loginDto);
+        // return { token }; // Return the generated JWT token
+        res.cookie('access_token', token, {
+            httpOnly: true,
+            sameSite: 'lax', // Use 'lax' for CSRF protection
+            secure: process.env.NODE_ENV === 'production', // Set to true in production
+            maxAge: 24 * 60 * 60 * 1000, // 1 day
+            path: '/', // Cookie path
+        });
+        return {message: 'Login successful, token set in cookie'};
+    }
 
   @Get('profile')
   @UseGuards(AuthGuard('jwt')) // Use JWT guard to protect this route
