@@ -34,4 +34,22 @@ export class AuthService {
     }
     return this.jwtService.sign({ id: user.id, email: user.email });
   }
+
+ async socialLogin(userData: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    provider: string;
+  }) {
+    let user = await this.userService.findUserByEmail(userData.email);
+    if (!user) {
+      user = await this.userService.createUser({
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName, // Assuming lastName is optional or not provided
+        password: '', // Password can be empty for social logins
+      });
+    }
+    return this.jwtService.sign({ id: user.id, email: user.email });
+  }
 }

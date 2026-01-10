@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Req, UseGuards,Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  UseGuards,
+  Res,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from 'src/users/users.service';
 import { AuthService } from './auth.service';
@@ -20,22 +28,22 @@ export class AuthController {
     return { token };
   }
 
- @Post('login')
-    async login(
-        @Body() loginDto: LoginDto,
-        @Res({passthrough: true}) res: any
-    ): Promise<{message :string}> {
-        const token =  await this.authService.login(loginDto);
-        // return { token }; // Return the generated JWT token
-        res.cookie('access_token', token, {
-            httpOnly: true,
-            sameSite: 'lax', // Use 'lax' for CSRF protection
-            secure: process.env.NODE_ENV === 'production', // Set to true in production
-            maxAge: 24 * 60 * 60 * 1000, // 1 day
-            path: '/', // Cookie path
-        });
-        return {message: 'Login successful, token set in cookie'};
-    }
+  @Post('login')
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: any,
+  ): Promise<{ message: string }> {
+    const token = await this.authService.login(loginDto);
+    // return { token }; // Return the generated JWT token
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      sameSite: 'lax', // Use 'lax' for CSRF protection
+      secure: process.env.NODE_ENV === 'production', // Set to true in production
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      path: '/', // Cookie path
+    });
+    return { message: 'Login successful, token set in cookie' };
+  }
 
   @Get('profile')
   @UseGuards(AuthGuard('jwt')) // Use JWT guard to protect this route
@@ -45,5 +53,60 @@ export class AuthController {
       throw new Error('User not found');
     }
     return { email: user.email };
+  }
+
+  @Post('logout')
+  async logout(
+    @Res({ passthrough: true }) res: any,
+  ): Promise<{ message: string }> {
+    res.clearCookie('access_token'); // Clear the cookie
+    return { message: 'Logout successful, cookie cleared' };
+  }
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth(@Req() req: any) {}
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthCallback(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: any,
+  ): Promise<{ message: string }> {
+    const user = req.user; // User information from Google
+    const token = await this.authService.socialLogin(user);
+
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      sameSite: 'lax', // Use 'lax' for CSRF protection
+      secure: process.env.NODE_ENV === 'production', // Set to true in production
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      path: '/', // Cookie path
+    });
+    return res.redirect('http://localhost:3000/dashboard'); // Redirect to your frontend or desired URL
+  }
+
+
+  @Get('github')
+  @UseGuards(AuthGuard('github'))
+  async githubAuth(@Req() req: any) {}
+
+  @Get('github/callback')
+  @UseGuards(AuthGuard('github'))
+  async githubAuthCallback(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: any,
+  ): Promise<{ message: string }> {
+    const user = req.user; // User information from Google
+    const token = await this.authService.socialLogin(user);
+
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      sameSite: 'lax', // Use 'lax' for CSRF protection
+      secure: process.env.NODE_ENV === 'production', // Set to true in production
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      path: '/', // Cookie path
+    });
+    return res.redirect('http://localhost:3000/dashboard'); // Redirect to your frontend or desired URL
   }
 }
