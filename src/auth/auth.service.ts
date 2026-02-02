@@ -23,16 +23,14 @@ export class AuthService {
     return this.jwtService.sign({ id: user.id, email: user.email }); // Generate JWT token after user creation
   }
 
-  async login(loginDto: LoginDto) {
+ async login(loginDto: LoginDto): Promise<{ user: any; token: string }> {
     const user = await this.userService.findUserByEmail(loginDto.email);
     // if user does not exist or password is incorrect, throw an error
-
-  
-
     if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    return this.jwtService.sign({ id: user.id, email: user.email });
+    const token = this.jwtService.sign({ id: user.id, email: user.email });
+    return { user, token };
   }
 
  async socialLogin(userData: {
@@ -51,5 +49,9 @@ export class AuthService {
       });
     }
     return this.jwtService.sign({ id: user.id, email: user.email });
+  }
+
+  generateJwtToken(payload: { id: number; email: string }): string {
+    return this.jwtService.sign(payload);
   }
 }

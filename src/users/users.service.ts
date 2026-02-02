@@ -22,7 +22,19 @@ export class UsersService {
     return await this.userRepository.save(newUser);
   }
 
+  async setTwoFASecret(id: number, secret: string) {
+    return this.userRepository.update({ id }, { twoFactorSecret: secret });
+  }
+
+  async enableTwoFA(id: number) {
+    return this.userRepository.update({ id }, { isTwoFAEnabled: true });
+  }
+
   async findUserByEmail(email: string): Promise<User | null> {
     return await this.userRepository.findOne({ where: { email } });
+  }
+
+async findUserById(id: number): Promise<User | null> {
+    return this.userRepository.findOne({ where: { id } });
   }
 }

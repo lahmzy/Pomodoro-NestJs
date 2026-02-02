@@ -8,6 +8,8 @@ import { JwtStrategy } from './jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { GoogleStrategy } from './google.strategy';
 import { GithubStrategy } from './github.strategy';
+import { TwoFAService } from './two-fa.service';
+import { TwoFaGuard } from './twofa.guard';
 
 
 @Module({
@@ -26,7 +28,7 @@ import { GithubStrategy } from './github.strategy';
       inject:[ConfigService]
       })
   ],
-  providers: [AuthService, JwtStrategy, GoogleStrategy, GithubStrategy],
+  providers: [AuthService, JwtStrategy, GoogleStrategy, GithubStrategy, TwoFAService,TwoFaGuard],
   controllers: [AuthController]
 })
 export class AuthModule {}

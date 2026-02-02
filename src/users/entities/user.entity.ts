@@ -17,8 +17,8 @@ export class User {
   @Column({ nullable: true })
   lastName: string;
 
-  @Column({ nullable: true })
-  isTwoFactorEnabled: string;
+  @Column({ default: false })
+  isTwoFAEnabled: boolean;
 
   @Column({ nullable: true })
   twoFactorSecret: string;
