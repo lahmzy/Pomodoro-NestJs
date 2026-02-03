@@ -20,6 +20,6 @@ export class User {
   @Column({ default: false })
   isTwoFAEnabled: boolean;
 
-  @Column({ nullable: true })
-  twoFactorSecret: string;
+  @Column({ type: 'varchar', nullable: true })
+  twoFactorSecret: string | null;
 }

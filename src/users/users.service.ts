@@ -30,11 +30,18 @@ export class UsersService {
     return this.userRepository.update({ id }, { isTwoFAEnabled: true });
   }
 
+  async disableTwoFA(id: number) {
+    return this.userRepository.update(
+      { id },
+      { isTwoFAEnabled: false, twoFactorSecret: null },
+    );
+  }
+
   async findUserByEmail(email: string): Promise<User | null> {
     return await this.userRepository.findOne({ where: { email } });
   }
 
-async findUserById(id: number): Promise<User | null> {
+  async findUserById(id: number): Promise<User | null> {
     return this.userRepository.findOne({ where: { id } });
   }
 }

@@ -25,7 +25,6 @@ export class PomodoroSessionController {
     @Body()
     dto: StartSessionDTO,
     @Req()
-    @Req()
     req: Request & { user: { id: number } },
   ) {
     return await this.pomodoroService.start(dto, req.user.id);

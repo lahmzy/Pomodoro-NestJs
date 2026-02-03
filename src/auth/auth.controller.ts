@@ -5,7 +5,8 @@ import {
   Post,
   Req,
   UseGuards,
-  Res,UnauthorizedException
+  Res,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from 'src/users/users.service';
@@ -31,13 +32,12 @@ export class AuthController {
     return { token };
   }
 
-   @Post('login')
+  @Post('login')
   async login(
     @Body() loginDTO: LoginDto,
     @Res({ passthrough: true }) res: any,
   ): Promise<{ message: string; twoFaRequired?: boolean }> {
     const { token, user } = await this.authService.login(loginDTO);
-
 
     if (user.isTwoFAEnabled) {
       res.cookie('pending_user', user.id, {
@@ -59,15 +59,16 @@ export class AuthController {
     return { message: 'Login successful, token set in cookie' };
   }
 
-
   @Get('profile')
   @UseGuards(AuthGuard('jwt')) // Use JWT guard to protect this route
-  async profile(@Req() req: any): Promise<{ email: string }> {
+  async profile(
+    @Req() req: any,
+  ): Promise<{ email: string; isTwoFAEnabled: boolean }> {
     const user = await this.userService.findUserByEmail(req.user.email);
     if (!user) {
       throw new Error('User not found');
     }
-    return { email: user.email };
+    return { email: user.email, isTwoFAEnabled: user.isTwoFAEnabled };
   }
 
   @Post('logout')
@@ -101,7 +102,6 @@ export class AuthController {
     return res.redirect('http://localhost:3000/dashboard'); // Redirect to your frontend or desired URL
   }
 
-
   @Get('github')
   @UseGuards(AuthGuard('github'))
   async githubAuth(@Req() req: any) {}
@@ -125,8 +125,7 @@ export class AuthController {
     return res.redirect('http://localhost:3000/dashboard'); // Redirect to your frontend or desired URL
   }
 
-
-@UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'))
   @Post('2fa/enable')
   async enableTwoFactorAuth(@Req() req: any, @Body('code') code: string) {
     const user = await this.userService.findUserByEmail(req.user.email);
@@ -141,7 +140,7 @@ export class AuthController {
     return { message: '2FA enabled successfully', success: true };
   }
 
-@UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'))
   @Post('2fa/generate')
   async generateTwoFactorAuthSecret(@Req() req: any) {
     const user = req.user;
@@ -154,38 +153,52 @@ export class AuthController {
     return { qrCode, secret: secret.base32 };
   }
 
-@UseGuards(TwoFaGuard)
-@Post('2fa/verify')
-async verifyTwoFactorAuthCode(
-  @Req() req: any,
-  @Body('code') code: string,
-  @Res({ passthrough: true }) res: any,
-) {
-  const user = await this.userService.findUserById(+req.user.id);
-
-  if (!user) {
-    throw new UnauthorizedException('User not found');
+  @UseGuards(AuthGuard('jwt'))
+  @Post('2fa/disable')
+  async disableTwoFactorAuth(@Req() req: any) {
+    const user = await this.userService.findUserByEmail(req.user.email);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    await this.userService.disableTwoFA(user.id);
+    return { message: '2FA disabled successfully', success: true };
   }
 
-  const verified = this.twoFAService.verifyCode(user.twoFactorSecret, code);
-  if (!verified) {
-    throw new UnauthorizedException('Invalid 2FA code');
+  @UseGuards(TwoFaGuard)
+  @Post('2fa/verify')
+  async verifyTwoFactorAuthCode(
+    @Req() req: any,
+    @Body('code') code: string,
+    @Res({ passthrough: true }) res: any,
+  ) {
+    const user = await this.userService.findUserById(+req.user.id);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    if (!user.twoFactorSecret) {
+      throw new UnauthorizedException('2FA not set up for this user');
+    }
+
+    const verified = this.twoFAService.verifyCode(user.twoFactorSecret, code);
+    if (!verified) {
+      throw new UnauthorizedException('Invalid 2FA code');
+    }
+
+    const payload = { id: user.id, email: user.email };
+    const token = this.authService.generateJwtToken(payload);
+
+    res.clearCookie('pending_user'); // important cleanup
+
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 24 * 60 * 60 * 1000,
+      path: '/',
+    });
+
+    return { message: '2FA verification successful', success: true };
   }
-
-  const payload = { id: user.id, email: user.email };
-  const token = this.authService.generateJwtToken(payload);
-
-  res.clearCookie('pending_user'); // important cleanup
-
-  res.cookie('access_token', token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000,
-    path: '/',
-  });
-
-  return { message: '2FA verification successful', success: true };
-}
-
 }
