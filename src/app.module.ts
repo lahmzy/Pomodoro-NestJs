@@ -14,21 +14,36 @@ import { PomodoroSessionModule } from './pomodoro-session/pomodoro-session.modul
       envFilePath: '.env',
     }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('DB_HOST'),
-        port: config.get<number>('DB_PORT') ?? 5432,
-        username: config.get<string>('DB_USERNAME'),
-        password: config.get<string>('DB_PASSWORD'),
-        database: config.get<string>('DB_NAME'),
+  imports: [ConfigModule],
+  useFactory: async (config: ConfigService) => {
+    const databaseUrl = config.get<string>('DATABASE_URL');
 
-        // entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // set to false in production
-        autoLoadEntities: true,
-      }),
-      inject: [ConfigService],
-    }),
+    return {
+      type: 'postgres',
+      // If DATABASE_URL exists (Production), use it. Otherwise, use individual pieces (Local).
+      url: databaseUrl, 
+      host: !databaseUrl ? config.get<string>('DB_HOST') : undefined,
+      port: !databaseUrl ? config.get<number>('DB_PORT') ?? 5432 : undefined,
+      username: !databaseUrl ? config.get<string>('DB_USERNAME') : undefined,
+      password: !databaseUrl ? config.get<string>('DB_PASSWORD') : undefined,
+      database: !databaseUrl ? config.get<string>('DB_NAME') : undefined,
+
+      autoLoadEntities: true,
+      synchronize: true, // This will create the tables on Supabase for you
+      
+      // CRITICAL: Supabase requires SSL in production
+      ssl: databaseUrl ? { rejectUnauthorized: false } : false,
+      
+      // Extra config for Supabase Connection Pooler
+      extra: databaseUrl ? {
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
+      } : {},
+    };
+  },
+  inject: [ConfigService],
+}),
     AuthModule,
     UsersModule,
     PomodoroSessionModule,
