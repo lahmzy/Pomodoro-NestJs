@@ -4,12 +4,14 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from 'src/users/users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UsersService,
-    private readonly jwtService: JwtService, // Assuming you have JwtService injected for token generation
+    private readonly jwtService: JwtService, 
+private configService: ConfigService,// Assuming you have JwtService injected for token generation
   ) {}
   async register(@Body() createUserDto: CreateUserDto) {
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);

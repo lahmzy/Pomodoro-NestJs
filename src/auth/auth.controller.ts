@@ -15,6 +15,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { TwoFAService } from './two-fa.service';
 import { TwoFaGuard } from './twofa.guard';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')
 export class AuthController {
@@ -22,6 +23,7 @@ export class AuthController {
     private authService: AuthService,
     private userService: UsersService,
     private twoFAService: TwoFAService,
+    private configService: ConfigService,
   ) {}
 
   @Post('register')
@@ -99,7 +101,9 @@ export class AuthController {
       maxAge: 24 * 60 * 60 * 1000, // 1 day
       path: '/', // Cookie path
     });
-    return res.redirect('http://localhost:3000/dashboard'); // Redirect to your frontend or desired URL
+   
+const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';// Redirect to your frontend or desired URL
+    return res.redirect(frontendUrl);
   }
 
   @Get('github')
@@ -122,7 +126,8 @@ export class AuthController {
       maxAge: 24 * 60 * 60 * 1000, // 1 day
       path: '/', // Cookie path
     });
-    return res.redirect('http://localhost:3000/dashboard'); // Redirect to your frontend or desired URL
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';// Redirect to your frontend or desired URL
+    return res.redirect(frontendUrl);
   }
 
   @UseGuards(AuthGuard('jwt'))
