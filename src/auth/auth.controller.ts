@@ -24,7 +24,7 @@ export class AuthController {
     private userService: UsersService,
     private twoFAService: TwoFAService,
     private configService: ConfigService,
-  ) {}
+  ) { }
 
   @Post('register')
   async register(
@@ -51,12 +51,14 @@ export class AuthController {
       return { message: '2FA required', twoFaRequired: true };
     }
     // return { token }; // Return the generated JWT token
+    const isProd = this.configService.get('NODE_ENV') === 'production';
+
     res.cookie('access_token', token, {
       httpOnly: true,
-      sameSite: 'lax', // Use 'lax' for CSRF protection
-      secure: process.env.NODE_ENV === 'production', // Set to true in production
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-      path: '/', // Cookie path
+      secure: true, // Must be true for sameSite: 'none'
+      sameSite: isProd ? 'none' : 'lax', // 'none' for cross-site prod, 'lax' for local
+      maxAge: 24 * 60 * 60 * 1000,
+      path: '/',
     });
     return { message: 'Login successful, token set in cookie' };
   }
@@ -83,7 +85,7 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() req: any) {}
+  async googleAuth(@Req() req: any) { }
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
@@ -94,21 +96,23 @@ export class AuthController {
     const user = req.user; // User information from Google
     const token = await this.authService.socialLogin(user);
 
+    const isProd = this.configService.get('NODE_ENV') === 'production';
+
     res.cookie('access_token', token, {
       httpOnly: true,
-      sameSite: 'lax', // Use 'lax' for CSRF protection
-      secure: process.env.NODE_ENV === 'production', // Set to true in production
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-      path: '/', // Cookie path
+      secure: true, // Must be true for sameSite: 'none'
+      sameSite: isProd ? 'none' : 'lax', // 'none' for cross-site prod, 'lax' for local
+      maxAge: 24 * 60 * 60 * 1000,
+      path: '/',
     });
-   
-const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';// Redirect to your frontend or desired URL
+
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';// Redirect to your frontend or desired URL
     return res.redirect(frontendUrl);
   }
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  async githubAuth(@Req() req: any) {}
+  async githubAuth(@Req() req: any) { }
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
@@ -119,12 +123,14 @@ const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://lo
     const user = req.user; // User information from Google
     const token = await this.authService.socialLogin(user);
 
+    const isProd = this.configService.get('NODE_ENV') === 'production';
+
     res.cookie('access_token', token, {
       httpOnly: true,
-      sameSite: 'lax', // Use 'lax' for CSRF protection
-      secure: process.env.NODE_ENV === 'production', // Set to true in production
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-      path: '/', // Cookie path
+      secure: true, // Must be true for sameSite: 'none'
+      sameSite: isProd ? 'none' : 'lax', // 'none' for cross-site prod, 'lax' for local
+      maxAge: 24 * 60 * 60 * 1000,
+      path: '/',
     });
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';// Redirect to your frontend or desired URL
     return res.redirect(frontendUrl);
@@ -195,11 +201,12 @@ const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://lo
     const token = this.authService.generateJwtToken(payload);
 
     res.clearCookie('pending_user'); // important cleanup
+    const isProd = this.configService.get('NODE_ENV') === 'production';
 
     res.cookie('access_token', token, {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      secure: true, // Must be true for sameSite: 'none'
+      sameSite: isProd ? 'none' : 'lax', // 'none' for cross-site prod, 'lax' for local
       maxAge: 24 * 60 * 60 * 1000,
       path: '/',
     });
