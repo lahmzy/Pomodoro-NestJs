@@ -18,7 +18,7 @@ async function bootstrap() {
   const frontendUrl = configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
 
   app.enableCors({
-    origin: ['https://pomodoro-next-js-mocha.vercel.app', 'http://localhost:3000'], // Allow both Prod and Local
+    origin: [frontendUrl, 'http://localhost:3000'], // Allow both Prod and Local
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true, // Essential for cookies and Auth headers
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
