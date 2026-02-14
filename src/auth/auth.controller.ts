@@ -41,17 +41,19 @@ export class AuthController {
   ): Promise<{ message: string; twoFaRequired?: boolean }> {
     const { token, user } = await this.authService.login(loginDTO);
 
+     const isProd = this.configService.get('NODE_ENV') === 'production';
+
     if (user.isTwoFAEnabled) {
       res.cookie('pending_user', user.id, {
         httpOnly: true,
-        sameSite: 'lax', // Use 'lax' for CSRF protection
+        sameSite:  isProd ? 'none' : 'lax', // 'none' for cross-site prod, 'lax' for local
         secure: process.env.NODE_ENV === 'production', // Set to true in production
         maxAge: 5 * 60 * 1000, // 5 minutes
       });
       return { message: '2FA required', twoFaRequired: true };
     }
     // return { token }; // Return the generated JWT token
-    const isProd = this.configService.get('NODE_ENV') === 'production';
+   
 
     res.cookie('access_token', token, {
       httpOnly: true,
