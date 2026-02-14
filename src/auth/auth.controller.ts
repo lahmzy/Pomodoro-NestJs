@@ -109,7 +109,7 @@ export class AuthController {
     });
 
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';// Redirect to your frontend or desired URL
-    return res.redirect(frontendUrl);
+    return res.redirect(`${frontendUrl}/dashboard`);
   }
 
   @Get('github')
@@ -135,7 +135,7 @@ export class AuthController {
       path: '/',
     });
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';// Redirect to your frontend or desired URL
-    return res.redirect(frontendUrl);
+    return res.redirect(`${frontendUrl}/dashboard`);
   }
 
   @UseGuards(AuthGuard('jwt'))
