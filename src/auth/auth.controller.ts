@@ -54,7 +54,7 @@ export class AuthController {
     }
     // return { token }; // Return the generated JWT token
 
-    //ADDED EMpty space to sign in to git
+
    
 
     res.cookie('access_token', token, {
